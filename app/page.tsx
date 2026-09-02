@@ -128,12 +128,6 @@ const trust = [
   ['04', '24/7 Support & Maintenance'],
 ]
 
-const specialties = [
-  ['Logo Design', 'Distinctive marks built for recognition.', Braces],
-  ['Brand Guidelines', 'A consistent visual language for every channel.', Palette],
-  ['Visual Identity Systems', 'Flexible systems made to grow with you.', Layers3],
-]
-
 const iconMap = {
   BarChart3,
   Bot,
@@ -379,44 +373,6 @@ export default function Page() {
               </a>
             </>
           )}
-        </div>
-      </section>
-
-      <section className="border-y border-[#211d27] px-6 py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#9a5cff]">Our services</p>
-              <h2 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Branding & Identity</h2>
-              <p className="mt-5 max-w-md text-[#aaa6b5]">We build strong brand identities that tell your story and leave a lasting impression.</p>
-            </div>
-            <div className="flex gap-3">
-              <button aria-label="Previous service" className="rounded-full border border-[#716d78] p-3 hover:border-[#f7f5ff]">
-                <ArrowLeft size={20} />
-              </button>
-              <button aria-label="Next service" className="rounded-full border border-[#716d78] p-3 hover:border-[#f7f5ff]">
-                <ArrowRight size={20} />
-              </button>
-            </div>
-          </div>
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
-            {specialties.map(([title, text, Icon], index) => {
-              const SpecialtyIcon = Icon as typeof Braces
-              return (
-                <article key={title as string} className="flex min-h-72 flex-col justify-between rounded-2xl border border-[#7727ff] bg-[linear-gradient(145deg,#26104e,#6b14dc_55%,#db15dd)] p-7 shadow-[inset_0_1px_0_#ffffff22]">
-                  <div className="flex items-start justify-between">
-                    <SpecialtyIcon size={44} />
-                    <ArrowUpRight size={22} />
-                  </div>
-                  <div>
-                    <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#eadcff]">0{index + 1}</p>
-                    <h3 className="text-2xl font-bold">{title as string}</h3>
-                    <p className="mt-2 text-sm text-[#e7dcff]">{text as string}</p>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
         </div>
       </section>
 
