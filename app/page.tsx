@@ -299,7 +299,7 @@ export default function Page() {
           <div className="col-span-2 flex items-center gap-5 border-[#5b5662] lg:col-span-1 lg:border-r">
             <div><div className="flex text-[#f6ce46]">{[1,2,3,4,5].map(n => <Star key={n} size={11} fill="currentColor" />)}</div><p className="mt-1 text-xs text-[#aaa6b5]">Rated 4.9/5 by</p><strong className="text-3xl">1,200+</strong></div>
           </div>
-          {['Trustpilot', 'Clutch', 'DesignRush', 'Capterra'].map((name) => <div key={name} className="flex items-center gap-2 text-lg font-bold text-[#d7d3de]"><ArrowUpRight className="text-[#9a5cff]" size={20} />{name}</div>)}
+          {['Trustpilot', 'Clutch', 'DesignRush', 'Capterra'].map((name) => <div key={name} className="flex items-center gap-2 text-lg font-bold text-[#d7d3de]">{name}</div>)}
         </div>
       </section>
 
@@ -316,7 +316,7 @@ export default function Page() {
             <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {services.map(({ icon: Icon, title, text, featured }) => (
                 <article key={title} className={`group flex min-h-52 flex-col justify-between rounded-2xl border p-7 transition-transform hover:-translate-y-1 ${featured ? 'border-[#8b4cff] bg-[linear-gradient(135deg,#4c0bc7,#7a18f5)] shadow-[0_18px_60px_#6417ed35]' : 'border-[#514d57] bg-[#111013]'}`}>
-                  <div className="flex items-start justify-between"><Icon size={38} strokeWidth={1.8} className={featured ? 'text-[#f7f5ff]' : 'text-[#7727ff]'} /><ArrowUpRight size={22} className={featured ? 'text-[#f7f5ff]' : 'text-[#7727ff]'} /></div>
+                  <div className="flex items-start justify-between"><Icon size={38} strokeWidth={1.8} className={featured ? 'text-[#f7f5ff]' : 'text-[#7727ff]'} /></div>
                   <div><h3 className="max-w-52 text-lg font-bold leading-tight">{title}</h3><p className={`mt-3 text-sm leading-relaxed ${featured ? 'text-[#e7dcff]' : 'text-[#aaa6b5]'}`}>{text}</p></div>
                 </article>
               ))}
@@ -330,7 +330,7 @@ export default function Page() {
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Built on Trust. Driven by Results.</h2>
           <p className="mx-auto mt-4 max-w-xl text-[#c9bee1]">We don&apos;t just deliver work — we build long-term partnerships grounded in speed, clarity, and outcomes.</p>
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {trust.map(([number, label]) => <article key={number} className="min-h-56 rounded-2xl border border-[#8970bd] bg-[#2d0c75]/45 p-6 text-left"><div className="flex items-start justify-between"><span className="text-5xl font-extrabold">{number}</span><ArrowUpRight size={22} /></div><h3 className="mt-8 text-xl font-bold leading-snug">{label}</h3></article>)}
+            {trust.map(([number, label]) => <article key={number} className="min-h-56 rounded-2xl border border-[#8970bd] bg-[#2d0c75]/45 p-6 text-left"><div className="flex items-start justify-between"><span className="text-5xl font-extrabold">{number}</span></div><h3 className="mt-8 text-xl font-bold leading-snug">{label}</h3></article>)}
           </div>
         </div>
       </section>
@@ -385,7 +385,7 @@ export default function Page() {
           Tell us what you&apos;re building. We&apos;ll bring the strategy, design, development, and growth expertise.
         </p>
         <a href="/contact" className="mt-9 inline-flex items-center gap-2 rounded-lg bg-[#6417ed] px-8 py-4 font-bold hover:bg-[#7727ff]">
-          Start a Project <ArrowUpRight size={19} />
+          Start a Project
         </a>
       </section>
     </main>

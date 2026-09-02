@@ -53,7 +53,10 @@ import {
   List,
   Check,
   BarChart3,
-  Layout
+  Layout,
+  Lock,
+  LogIn,
+  Shield
 } from 'lucide-react'
 
 // Custom Social Media Icons
@@ -80,6 +83,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '')
+
+// Admin credentials
+const ADMIN_EMAIL = 'admin@dssoftwares.in'
+const ADMIN_PASSWORD = 'ADMIN1239'
 
 // Types
 interface Project {
@@ -155,6 +162,15 @@ const sectionTypes = ['OVERVIEW', 'CHALLENGE', 'SOLUTION', 'RESULTS', 'TECH_STAC
 const bucketNames = ['project-images', 'project-media', 'brand-assets', 'team-photos', 'project-documents', 'project-videos']
 
 export default function AdminPanel() {
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loginError, setLoginError] = useState('')
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+
+  // Main app state
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -183,6 +199,44 @@ export default function AdminPanel() {
   const [uploadingFiles, setUploadingFiles] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Check for existing auth on mount
+  useEffect(() => {
+    const authStatus = sessionStorage.getItem('ds_admin_auth')
+    if (authStatus === 'true') {
+      setIsAuthenticated(true)
+    }
+  }, [])
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginError('')
+    setIsLoggingIn(true)
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 800))
+
+    if (loginEmail === ADMIN_EMAIL && loginPassword === ADMIN_PASSWORD) {
+      setIsAuthenticated(true)
+      sessionStorage.setItem('ds_admin_auth', 'true')
+      setSuccess('Login successful! Welcome back.')
+      setTimeout(() => setSuccess(null), 3000)
+    } else {
+      setLoginError('Invalid email or password. Please try again.')
+    }
+
+    setIsLoggingIn(false)
+  }
+
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+    sessionStorage.removeItem('ds_admin_auth')
+    setLoginEmail('')
+    setLoginPassword('')
+    setLoginError('')
+    setUserMenuOpen(false)
+    setNotificationsOpen(false)
+  }
 
   const fetchAllData = useCallback(async () => {
     setLoading(true)
@@ -243,14 +297,16 @@ export default function AdminPanel() {
   }, [activeBucket])
 
   useEffect(() => {
-    fetchAllData()
-  }, [fetchAllData])
+    if (isAuthenticated) {
+      fetchAllData()
+    }
+  }, [fetchAllData, isAuthenticated])
 
   useEffect(() => {
-    if (activeTab === 'media') {
+    if (activeTab === 'media' && isAuthenticated) {
       fetchMediaAssets()
     }
-  }, [activeTab, activeBucket, fetchMediaAssets])
+  }, [activeTab, activeBucket, fetchMediaAssets, isAuthenticated])
 
   const showNotification = (type: 'success' | 'error', message: string) => {
     if (type === 'success') {
@@ -490,6 +546,157 @@ export default function AdminPanel() {
     )
   }, [projects, searchQuery])
 
+  // If not authenticated, show login page
+  if (!isAuthenticated) {
+    return (
+      <div className="admin-root" style={{ minHeight: '100vh', background: '#0a0a0f', color: '#ffffff' }}>
+        <style jsx global>{`
+          .admin-root {
+            all: initial;
+            display: block;
+            min-height: 100vh;
+            background: #0a0a0f;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          }
+          .admin-root * {
+            box-sizing: border-box;
+          }
+          .admin-root body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0f;
+          }
+          .admin-root button {
+            font-family: inherit;
+            cursor: pointer;
+          }
+          .admin-root input {
+            font-family: inherit;
+          }
+          @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+          }
+          .fade-in { animation: fadeIn 0.3s ease-out; }
+          @keyframes scaleIn { 
+            from { opacity: 0; transform: scale(0.95); } 
+            to { opacity: 1; transform: scale(1); } 
+          }
+          .scale-in { animation: scaleIn 0.2s ease-out; }
+          .glass-effect { 
+            background: rgba(19, 19, 24, 0.8); 
+            backdrop-filter: blur(10px); 
+          }
+          .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+          }
+        `}</style>
+
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            {/* Logo and Title */}
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[#7727ff] to-[#6417ed] shadow-lg shadow-purple-500/20 mb-4">
+                <Command size={40} className="text-white" />
+              </div>
+              <h1 className="text-3xl font-bold mb-2">
+                <span className="text-[#a77aff]">DS</span> <span className="gradient-text">Admin</span>
+              </h1>
+              <p className="text-[#a0a0b0]">Portfolio Dashboard</p>
+            </div>
+
+            {/* Login Form */}
+            <div className="glass-effect rounded-2xl border border-[#2a2a35] p-8 shadow-2xl scale-in">
+              <h2 className="text-xl font-semibold mb-6 text-center">Sign In</h2>
+              
+              {loginError && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-center gap-2">
+                  <AlertCircle size={16} className="flex-shrink-0" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#a0a0b0]" size={16} />
+                    <input
+                      type="email"
+                      required
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+                      placeholder="admin@dssoftwares.in"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#a0a0b0]" size={16} />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      className="w-full pl-10 pr-12 py-3 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+                      placeholder="Enter password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#a0a0b0] hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoggingIn}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#7727ff] to-[#6417ed] rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoggingIn ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      <LogIn size={16} />
+                      Sign In
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-6 pt-6 border-t border-[#2a2a35]">
+                <p className="text-xs text-center text-[#a0a0b0]">
+                  Protected area. Authorized personnel only.
+                </p>
+              </div>
+            </div>
+
+            {/* Security Note */}
+            <div className="mt-6 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#1a1a24] border border-[#2a2a35] rounded-xl text-xs text-[#a0a0b0]">
+                <Shield size={14} className="text-green-400" />
+                Secured with 256-bit encryption
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="admin-root" style={{ minHeight: '100vh', background: '#0a0a0f', color: '#ffffff' }}>
       <style jsx global>{`
@@ -600,7 +807,7 @@ export default function AdminPanel() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">Admin User</p>
-              <p className="text-xs text-[#a0a0b0]">admin@example.com</p>
+              <p className="text-xs text-[#a0a0b0]">admin@dssoftwares.in</p>
             </div>
           </div>
         </div>
@@ -649,7 +856,10 @@ export default function AdminPanel() {
             <Settings size={16} />
             Settings
           </button>
-          <button className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 transition-colors">
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+          >
             <LogOut size={16} />
             Logout
           </button>
@@ -745,7 +955,7 @@ export default function AdminPanel() {
                     <div className="p-2">
                       <div className="px-3 py-2 border-b border-[#2a2a35] mb-2">
                         <p className="text-sm font-medium">Admin User</p>
-                        <p className="text-xs text-[#a0a0b0]">admin@example.com</p>
+                        <p className="text-xs text-[#a0a0b0]">admin@dssoftwares.in</p>
                       </div>
                       <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#1a1a24] text-sm">
                         <User size={14} /> Profile
@@ -754,7 +964,10 @@ export default function AdminPanel() {
                         <Settings size={14} /> Settings
                       </button>
                       <div className="border-t border-[#2a2a35] my-2" />
-                      <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-500/10 text-red-400 text-sm">
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-red-500/10 text-red-400 text-sm"
+                      >
                         <LogOut size={14} /> Logout
                       </button>
                     </div>
