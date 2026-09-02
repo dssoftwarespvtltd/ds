@@ -13,21 +13,88 @@ const supabase = createClient(
 const projectTypes = ['Website', 'Custom software', 'Branding & UI/UX', 'Social media', 'Other']
 
 const budgetRanges = [
-  '$2,000–$5,000',
-  '$5,000–$15,000',
-  '$15,000–$30,000',
-  '$30,000+',
+  '₹25,000–₹50,000',
+  '₹50,000–₹1,00,000',
+  '₹1,00,000–₹2,50,000',
+  '₹2,50,000+',
   'Not sure yet'
+]
+
+// Country codes with dial codes and validation patterns
+const countryCodes = [
+  { code: '+91', country: 'India', flag: '🇮🇳', pattern: /^[6-9]\d{9}$/, placeholder: '98765 43210' },
+  { code: '+1', country: 'US/Canada', flag: '🇺🇸', pattern: /^\d{10}$/, placeholder: '(555) 000-0000' },
+  { code: '+44', country: 'UK', flag: '🇬🇧', pattern: /^\d{10}$/, placeholder: '7700 900123' },
+  { code: '+61', country: 'Australia', flag: '🇦🇺', pattern: /^\d{9}$/, placeholder: '491 570 006' },
+  { code: '+971', country: 'UAE', flag: '🇦🇪', pattern: /^\d{9}$/, placeholder: '50 123 4567' },
+  { code: '+65', country: 'Singapore', flag: '🇸🇬', pattern: /^\d{8}$/, placeholder: '8123 4567' },
+  { code: '+49', country: 'Germany', flag: '🇩🇪', pattern: /^\d{10,11}$/, placeholder: '151 12345678' },
+  { code: '+33', country: 'France', flag: '🇫🇷', pattern: /^\d{9}$/, placeholder: '6 12 34 56 78' },
+  { code: '+81', country: 'Japan', flag: '🇯🇵', pattern: /^\d{10}$/, placeholder: '90 1234 5678' },
+  { code: '+82', country: 'South Korea', flag: '🇰🇷', pattern: /^\d{9,10}$/, placeholder: '10 1234 5678' },
+  { code: '+86', country: 'China', flag: '🇨🇳', pattern: /^\d{11}$/, placeholder: '138 1234 5678' },
+  { code: '+7', country: 'Russia', flag: '🇷🇺', pattern: /^\d{10}$/, placeholder: '912 345 6789' },
+  { code: '+55', country: 'Brazil', flag: '🇧🇷', pattern: /^\d{10,11}$/, placeholder: '11 91234 5678' },
+  { code: '+27', country: 'South Africa', flag: '🇿🇦', pattern: /^\d{9}$/, placeholder: '82 123 4567' },
+  { code: '+234', country: 'Nigeria', flag: '🇳🇬', pattern: /^\d{10}$/, placeholder: '803 123 4567' },
+  { code: '+971', country: 'Saudi Arabia', flag: '🇸🇦', pattern: /^\d{9}$/, placeholder: '50 123 4567' },
+  { code: '+63', country: 'Philippines', flag: '🇵🇭', pattern: /^\d{10}$/, placeholder: '917 123 4567' },
+  { code: '+64', country: 'New Zealand', flag: '🇳🇿', pattern: /^\d{9}$/, placeholder: '21 123 456' },
+  { code: '+353', country: 'Ireland', flag: '🇮🇪', pattern: /^\d{9}$/, placeholder: '85 123 4567' },
+  { code: '+31', country: 'Netherlands', flag: '🇳🇱', pattern: /^\d{9}$/, placeholder: '6 12345678' },
+  { code: '+46', country: 'Sweden', flag: '🇸🇪', pattern: /^\d{9}$/, placeholder: '70 123 45 67' },
+  { code: '+47', country: 'Norway', flag: '🇳🇴', pattern: /^\d{8}$/, placeholder: '912 34 567' },
+  { code: '+45', country: 'Denmark', flag: '🇩🇰', pattern: /^\d{8}$/, placeholder: '12 34 56 78' },
+  { code: '+358', country: 'Finland', flag: '🇫🇮', pattern: /^\d{9,10}$/, placeholder: '40 123 4567' },
+  { code: '+48', country: 'Poland', flag: '🇵🇱', pattern: /^\d{9}$/, placeholder: '512 345 678' },
+  { code: '+34', country: 'Spain', flag: '🇪🇸', pattern: /^\d{9}$/, placeholder: '612 34 56 78' },
+  { code: '+39', country: 'Italy', flag: '🇮🇹', pattern: /^\d{9,10}$/, placeholder: '312 345 6789' },
+  { code: '+30', country: 'Greece', flag: '🇬🇷', pattern: /^\d{10}$/, placeholder: '691 234 5678' },
+  { code: '+90', country: 'Turkey', flag: '🇹🇷', pattern: /^\d{10}$/, placeholder: '532 123 4567' },
+  { code: '+52', country: 'Mexico', flag: '🇲🇽', pattern: /^\d{10}$/, placeholder: '55 1234 5678' },
+  { code: '+54', country: 'Argentina', flag: '🇦🇷', pattern: /^\d{10}$/, placeholder: '11 1234 5678' },
+  { code: '+56', country: 'Chile', flag: '🇨🇱', pattern: /^\d{9}$/, placeholder: '9 1234 5678' },
+  { code: '+57', country: 'Colombia', flag: '🇨🇴', pattern: /^\d{10}$/, placeholder: '312 345 6789' },
+  { code: '+60', country: 'Malaysia', flag: '🇲🇾', pattern: /^\d{9,10}$/, placeholder: '12 345 6789' },
+  { code: '+66', country: 'Thailand', flag: '🇹🇭', pattern: /^\d{9}$/, placeholder: '81 234 5678' },
+  { code: '+84', country: 'Vietnam', flag: '🇻🇳', pattern: /^\d{9,10}$/, placeholder: '912 345 678' },
+  { code: '+62', country: 'Indonesia', flag: '🇮🇩', pattern: /^\d{9,11}$/, placeholder: '812 3456 7890' },
+  { code: '+63', country: 'Pakistan', flag: '🇵🇰', pattern: /^\d{10}$/, placeholder: '312 3456789' },
+  { code: '+880', country: 'Bangladesh', flag: '🇧🇩', pattern: /^\d{10}$/, placeholder: '1712 345678' },
+  { code: '+94', country: 'Sri Lanka', flag: '🇱🇰', pattern: /^\d{9}$/, placeholder: '77 123 4567' },
+  { code: '+977', country: 'Nepal', flag: '🇳🇵', pattern: /^\d{10}$/, placeholder: '984 1234567' },
+  { code: '+960', country: 'Maldives', flag: '🇲🇻', pattern: /^\d{7}$/, placeholder: '771 2345' },
+  { code: '+975', country: 'Bhutan', flag: '🇧🇹', pattern: /^\d{8}$/, placeholder: '17 123 456' },
+  { code: '+92', country: 'Saudi Arabia', flag: '🇸🇦', pattern: /^\d{9}$/, placeholder: '50 123 4567' },
+  { code: '+968', country: 'Oman', flag: '🇴🇲', pattern: /^\d{8}$/, placeholder: '9123 4567' },
+  { code: '+965', country: 'Kuwait', flag: '🇰🇼', pattern: /^\d{8}$/, placeholder: '5123 4567' },
+  { code: '+973', country: 'Bahrain', flag: '🇧🇭', pattern: /^\d{8}$/, placeholder: '3312 3456' },
+  { code: '+974', country: 'Qatar', flag: '🇶🇦', pattern: /^\d{8}$/, placeholder: '3312 3456' },
+  { code: '+971', country: 'Dubai', flag: '🇦🇪', pattern: /^\d{9}$/, placeholder: '50 123 4567' },
+  { code: '+20', country: 'Egypt', flag: '🇪🇬', pattern: /^\d{10}$/, placeholder: '100 123 4567' },
+  { code: '+212', country: 'Morocco', flag: '🇲🇦', pattern: /^\d{9}$/, placeholder: '612 345 678' },
+  { code: '+216', country: 'Tunisia', flag: '🇹🇳', pattern: /^\d{8}$/, placeholder: '22 123 456' },
+  { code: '+254', country: 'Kenya', flag: '🇰🇪', pattern: /^\d{9}$/, placeholder: '712 345 678' },
+  { code: '+255', country: 'Tanzania', flag: '🇹🇿', pattern: /^\d{9}$/, placeholder: '712 345 678' },
+  { code: '+256', country: 'Uganda', flag: '🇺🇬', pattern: /^\d{9}$/, placeholder: '712 345 678' },
+  { code: '+233', country: 'Ghana', flag: '🇬🇭', pattern: /^\d{9}$/, placeholder: '24 123 4567' },
+  { code: '+234', country: 'Ethiopia', flag: '🇪🇹', pattern: /^\d{9}$/, placeholder: '91 123 4567' },
 ]
 
 type ContactFormData = {
   name: string
   email: string
   company: string
-  phone?: string
+  phone_country_code: string
+  phone: string
   project_type: string
   budget_range: string
   message: string
+}
+
+type PhoneValidation = {
+  isValid: boolean
+  error: string
 }
 
 export default function ContactPage() {
@@ -35,19 +102,63 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submissionId, setSubmissionId] = useState<string | null>(null)
+  const [selectedCountry, setSelectedCountry] = useState(countryCodes[0])
+  const [phoneError, setPhoneError] = useState<string | null>(null)
+
+  function validatePhoneNumber(phone: string, countryCode: string): PhoneValidation {
+    const country = countryCodes.find(c => c.code === countryCode)
+    if (!country) {
+      return { isValid: false, error: 'Invalid country code' }
+    }
+
+    // Remove all non-digit characters for validation
+    const digitsOnly = phone.replace(/\D/g, '')
+    
+    if (digitsOnly.length === 0) {
+      return { isValid: false, error: 'Phone number is required' }
+    }
+
+    if (!country.pattern.test(digitsOnly)) {
+      return { 
+        isValid: false, 
+        error: `Invalid ${country.country} phone number format. Expected: ${country.placeholder}` 
+      }
+    }
+
+    return { isValid: true, error: '' }
+  }
+
+  function formatPhoneNumber(phone: string, countryCode: string): string {
+    // Store the raw phone number without formatting
+    return phone.replace(/\D/g, '')
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsSubmitting(true)
     setError(null)
+    setPhoneError(null)
 
     const formData = new FormData(event.currentTarget)
+    const phoneRaw = (formData.get('phone') as string) || ''
+    
+    // Validate phone number
+    const phoneValidation = validatePhoneNumber(phoneRaw, selectedCountry.code)
+    if (!phoneValidation.isValid) {
+      setPhoneError(phoneValidation.error)
+      setIsSubmitting(false)
+      return
+    }
+
+    // Format phone number for storage (digits only)
+    const formattedPhone = formatPhoneNumber(phoneRaw, selectedCountry.code)
     
     const contactData: ContactFormData = {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       company: formData.get('company') as string,
-      phone: formData.get('phone') as string || null,
+      phone_country_code: selectedCountry.code,
+      phone: formattedPhone,
       project_type: formData.get('projectType') as string,
       budget_range: formData.get('budget') as string,
       message: formData.get('message') as string,
@@ -66,6 +177,7 @@ export default function ContactPage() {
           name: contactData.name,
           email: contactData.email,
           company: contactData.company,
+          phone_country_code: contactData.phone_country_code,
           phone: contactData.phone,
           project_type: contactData.project_type,
           budget_range: contactData.budget_range,
@@ -240,16 +352,47 @@ export default function ContactPage() {
                       placeholder="Your company" 
                     />
                   </label>
-                  <label className="flex flex-col gap-2 text-sm font-bold">
-                    Phone <span className="text-xs font-normal text-[#77727f]">(optional)</span>
-                    <input 
-                      type="tel" 
-                      name="phone" 
-                      autoComplete="tel" 
-                      className="rounded-xl border border-[#514d57] bg-[#09080b] px-4 py-3.5 text-base font-normal outline-none transition-colors placeholder:text-[#77727f] focus:border-[#9a5cff]" 
-                      placeholder="+1 (555) 000-0000" 
-                    />
-                  </label>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-sm font-bold">
+                      Phone <span className="text-xs font-normal text-[#77727f]">(optional)</span>
+                    </span>
+                    <div className="flex gap-2">
+                      <select
+                        name="phone_country_code"
+                        value={selectedCountry.code}
+                        onChange={(e) => {
+                          const country = countryCodes.find(c => c.code === e.target.value)
+                          setSelectedCountry(country || countryCodes[0])
+                          setPhoneError(null)
+                        }}
+                        className="w-[120px] rounded-xl border border-[#514d57] bg-[#09080b] px-3 py-3.5 text-base font-normal outline-none transition-colors focus:border-[#9a5cff]"
+                      >
+                        {countryCodes.map((country) => (
+                          <option key={country.code + country.country} value={country.code}>
+                            {country.flag} {country.code}
+                          </option>
+                        ))}
+                      </select>
+                      <input 
+                        type="tel" 
+                        name="phone" 
+                        autoComplete="tel" 
+                        placeholder={selectedCountry.placeholder}
+                        onChange={() => setPhoneError(null)}
+                        className={`flex-1 rounded-xl border bg-[#09080b] px-4 py-3.5 text-base font-normal outline-none transition-colors placeholder:text-[#77727f] focus:border-[#9a5cff] ${
+                          phoneError ? 'border-red-500' : 'border-[#514d57]'
+                        }`}
+                      />
+                    </div>
+                    {phoneError && (
+                      <span className="text-xs text-red-400">{phoneError}</span>
+                    )}
+                    {!phoneError && (
+                      <span className="text-xs text-[#77727f]">
+                        {selectedCountry.country}: {selectedCountry.placeholder}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <fieldset className="mt-6">
@@ -273,7 +416,7 @@ export default function ContactPage() {
                 </fieldset>
 
                 <label className="mt-6 flex flex-col gap-2 text-sm font-bold">
-                  Estimated budget
+                  Estimated budget (INR)
                   <select 
                     required 
                     name="budget" 
