@@ -19,9 +19,75 @@ import {
   Star,
   X,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
 
-const services = [
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+// Types based on your schema
+interface Project {
+  id: string
+  slug: string
+  client_name: string
+  title: string
+  category: string
+  hero_headline: string
+  short_description: string | null
+  visit_url: string | null
+  is_published: boolean
+  created_at: string
+  updated_at: string
+}
+
+interface Service {
+  id: string
+  project_id: string
+  name: string
+  sort_order: number
+}
+
+interface Testimonial {
+  id: string
+  project_id: string
+  quote_text: string
+  author_name: string
+  author_title: string | null
+}
+
+interface MediaAsset {
+  id: string
+  project_id: string
+  bucket_name: string
+  file_path: string
+  alt_text: string | null
+  mime_type: string | null
+  sort_order: number
+}
+
+interface Metric {
+  id: string
+  project_id: string
+  metrics_data: Record<string, any>
+  display_type: string
+  sort_order: number
+}
+
+interface PageSection {
+  id: string
+  project_id: string
+  section_type: string
+  title: string | null
+  body: string | null
+  sort_order: number
+  is_active: boolean
+}
+
+// Static fallback data (in case Supabase is not configured)
+const defaultServices = [
   {
     icon: Code2,
     title: 'Custom Software Development',
@@ -62,20 +128,110 @@ const trust = [
   ['04', '24/7 Support & Maintenance'],
 ]
 
-const projects = [
-  ['FINTECH', 'Fintech Dashboard', 'Streamlined user analytics and real-time transactions.', 'fintech-dashboard', BarChart3],
-  ['E-COMMERCE', 'E-commerce Platform', '300% increase in conversion through custom storefront.', 'ecommerce-platform', Layers3],
-  ['AI', 'AI-Powered Tool', 'Reduced support tickets by 40% using predictive models.', 'ai-support-tool', Sparkles],
-]
-
 const specialties = [
   ['Logo Design', 'Distinctive marks built for recognition.', Braces],
   ['Brand Guidelines', 'A consistent visual language for every channel.', Palette],
   ['Visual Identity Systems', 'Flexible systems made to grow with you.', Layers3],
 ]
 
+const iconMap = {
+  BarChart3,
+  Bot,
+  Braces,
+  Cloud,
+  Code2,
+  Globe2,
+  Layers3,
+  Palette,
+  ShieldCheck,
+  Smartphone,
+  Sparkles,
+}
+
 export default function Page() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [projects, setProjects] = useState<Project[]>([])
+  const [services, setServices] = useState(defaultServices)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch projects from Supabase
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        setLoading(true)
+        
+        // Fetch published projects
+        const { data: projectsData, error: projectsError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('is_published', true)
+          .order('created_at', { ascending: false })
+          .limit(3)
+
+        if (projectsError) throw projectsError
+
+        if (projectsData && projectsData.length > 0) {
+          setProjects(projectsData)
+          
+          // Fetch services for all projects
+          const { data: servicesData, error: servicesError } = await supabase
+            .from('services')
+            .select('*')
+            .order('sort_order', { ascending: true })
+
+          if (servicesError) throw servicesError
+
+          if (servicesData && servicesData.length > 0) {
+            // Map services to include icons based on name or use default icon
+            const mappedServices = servicesData.slice(0, 6).map((service, index) => ({
+              icon: iconMap[Object.keys(iconMap)[index % Object.keys(iconMap).length] as keyof typeof iconMap] || Code2,
+              title: service.name,
+              text: `${service.name} services tailored to your needs.`,
+              featured: index === 1, // You can customize this logic
+            }))
+            setServices(mappedServices)
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch data')
+        // Keep default data on error
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProjects()
+  }, [])
+
+  // Transform projects for display
+  const displayProjects = projects.map(project => {
+    const iconMapByCategory: Record<string, any> = {
+      'FINTECH': BarChart3,
+      'E-COMMERCE': Layers3,
+      'AI': Sparkles,
+      'TECH': Code2,
+      'CLOUD': Cloud,
+      'MOBILE': Smartphone,
+      'DEFAULT': Code2,
+    }
+    
+    return {
+      tag: project.category.toUpperCase(),
+      title: project.title,
+      text: project.short_description || project.hero_headline,
+      slug: project.slug,
+      icon: iconMapByCategory[project.category.toUpperCase()] || iconMapByCategory.DEFAULT,
+    }
+  })
+
+  // Fallback to default projects if no data
+  const finalProjects = displayProjects.length > 0 ? displayProjects : [
+    ['FINTECH', 'Fintech Dashboard', 'Streamlined user analytics and real-time transactions.', 'fintech-dashboard', BarChart3],
+    ['E-COMMERCE', 'E-commerce Platform', '300% increase in conversion through custom storefront.', 'ecommerce-platform', Layers3],
+    ['AI', 'AI-Powered Tool', 'Reduced support tickets by 40% using predictive models.', 'ai-support-tool', Sparkles],
+  ].map(([tag, title, text, slug, Icon]) => ({ tag, title, text, slug, icon: Icon }))
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#050506] font-sans text-[#f7f5ff] selection:bg-[#7428ff] selection:text-[#f7f5ff]">
@@ -160,14 +316,18 @@ export default function Page() {
             <h2 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">Everything your brand needs. <span className="text-[#7727ff]">One team.</span></h2>
             <p className="mx-auto mt-4 max-w-2xl text-[#aaa6b5]">From the first idea to launch and ongoing growth, we handle your complete digital journey.</p>
           </div>
-          <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {services.map(({ icon: Icon, title, text, featured }) => (
-              <article key={title} className={`group flex min-h-52 flex-col justify-between rounded-2xl border p-7 transition-transform hover:-translate-y-1 ${featured ? 'border-[#8b4cff] bg-[linear-gradient(135deg,#4c0bc7,#7a18f5)] shadow-[0_18px_60px_#6417ed35]' : 'border-[#514d57] bg-[#111013]'}`}>
-                <div className="flex items-start justify-between"><Icon size={38} strokeWidth={1.8} className={featured ? 'text-[#f7f5ff]' : 'text-[#7727ff]'} /><ArrowUpRight size={22} className={featured ? 'text-[#f7f5ff]' : 'text-[#7727ff]'} /></div>
-                <div><h3 className="max-w-52 text-lg font-bold leading-tight">{title}</h3><p className={`mt-3 text-sm leading-relaxed ${featured ? 'text-[#e7dcff]' : 'text-[#aaa6b5]'}`}>{text}</p></div>
-              </article>
-            ))}
-          </div>
+          {loading ? (
+            <div className="mt-14 text-center text-[#aaa6b5]">Loading services...</div>
+          ) : (
+            <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {services.map(({ icon: Icon, title, text, featured }) => (
+                <article key={title} className={`group flex min-h-52 flex-col justify-between rounded-2xl border p-7 transition-transform hover:-translate-y-1 ${featured ? 'border-[#8b4cff] bg-[linear-gradient(135deg,#4c0bc7,#7a18f5)] shadow-[0_18px_60px_#6417ed35]' : 'border-[#514d57] bg-[#111013]'}`}>
+                  <div className="flex items-start justify-between"><Icon size={38} strokeWidth={1.8} className={featured ? 'text-[#f7f5ff]' : 'text-[#7727ff]'} /><ArrowUpRight size={22} className={featured ? 'text-[#f7f5ff]' : 'text-[#7727ff]'} /></div>
+                  <div><h3 className="max-w-52 text-lg font-bold leading-tight">{title}</h3><p className={`mt-3 text-sm leading-relaxed ${featured ? 'text-[#e7dcff]' : 'text-[#aaa6b5]'}`}>{text}</p></div>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -186,26 +346,75 @@ export default function Page() {
         <div className="relative mx-auto max-w-5xl text-center">
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Real Impact. <span className="text-[#7727ff]">Proven Results.</span></h2>
           <p className="mx-auto mt-4 max-w-xl text-[#aaa6b5]">Explore how we&apos;ve helped startups and established businesses launch, scale, and stand out.</p>
-          <div className="mt-14 grid gap-4 text-left md:grid-cols-3">
-            {projects.map(([tag, title, text, slug, Icon]) => {
-              const ProjectIcon = Icon as typeof BarChart3
-              return <a aria-label={`View ${title as string} case study`} href={`/projects/${slug as string}`} key={title as string} className="group rounded-2xl border border-[#514d57] bg-[#111013] p-7 transition-all hover:-translate-y-1 hover:border-[#7727ff] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9a5cff]"><div className="mb-10 flex items-start justify-between"><ProjectIcon size={28} className="text-[#7727ff]" /><ArrowUpRight size={22} className="text-[#716d78] transition-colors group-hover:text-[#9a5cff]" /></div><p className="text-xs font-bold tracking-[0.18em] text-[#7727ff]">{tag as string}</p><h3 className="mt-5 text-xl font-bold">{title as string}</h3><p className="mt-3 text-sm leading-relaxed text-[#aaa6b5]">{text as string}</p><span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#d7d3de]">View case study <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" /></span></a>
-            })}
-          </div>
-          <a href="/projects/fintech-dashboard" className="mt-12 inline-flex items-center gap-2 rounded-lg bg-[#6417ed] px-8 py-4 text-sm font-bold transition-colors hover:bg-[#7727ff]">Explore Case Studies <ArrowUpRight size={17} /></a>
+          {loading ? (
+            <div className="mt-14 text-[#aaa6b5]">Loading projects...</div>
+          ) : (
+            <>
+              <div className="mt-14 grid gap-4 text-left md:grid-cols-3">
+                {finalProjects.map(({ tag, title, text, slug, icon: Icon }) => {
+                  return (
+                    <a 
+                      aria-label={`View ${title} case study`} 
+                      href={`/projects/${slug}`} 
+                      key={title} 
+                      className="group rounded-2xl border border-[#514d57] bg-[#111013] p-7 transition-all hover:-translate-y-1 hover:border-[#7727ff] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9a5cff]"
+                    >
+                      <div className="mb-10 flex items-start justify-between">
+                        <Icon size={28} className="text-[#7727ff]" />
+                        <ArrowUpRight size={22} className="text-[#716d78] transition-colors group-hover:text-[#9a5cff]" />
+                      </div>
+                      <p className="text-xs font-bold tracking-[0.18em] text-[#7727ff]">{tag}</p>
+                      <h3 className="mt-5 text-xl font-bold">{title}</h3>
+                      <p className="mt-3 text-sm leading-relaxed text-[#aaa6b5]">{text}</p>
+                      <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[#d7d3de]">
+                        View case study 
+                        <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                      </span>
+                    </a>
+                  )
+                })}
+              </div>
+              <a href="/projects" className="mt-12 inline-flex items-center gap-2 rounded-lg bg-[#6417ed] px-8 py-4 text-sm font-bold transition-colors hover:bg-[#7727ff]">
+                Explore Case Studies <ArrowUpRight size={17} />
+              </a>
+            </>
+          )}
         </div>
       </section>
 
       <section className="border-y border-[#211d27] px-6 py-24">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end">
-            <div><p className="text-sm font-bold uppercase tracking-[0.22em] text-[#9a5cff]">Our services</p><h2 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Branding & Identity</h2><p className="mt-5 max-w-md text-[#aaa6b5]">We build strong brand identities that tell your story and leave a lasting impression.</p></div>
-            <div className="flex gap-3"><button aria-label="Previous service" className="rounded-full border border-[#716d78] p-3 hover:border-[#f7f5ff]"><ArrowLeft size={20} /></button><button aria-label="Next service" className="rounded-full border border-[#716d78] p-3 hover:border-[#f7f5ff]"><ArrowRight size={20} /></button></div>
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.22em] text-[#9a5cff]">Our services</p>
+              <h2 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Branding & Identity</h2>
+              <p className="mt-5 max-w-md text-[#aaa6b5]">We build strong brand identities that tell your story and leave a lasting impression.</p>
+            </div>
+            <div className="flex gap-3">
+              <button aria-label="Previous service" className="rounded-full border border-[#716d78] p-3 hover:border-[#f7f5ff]">
+                <ArrowLeft size={20} />
+              </button>
+              <button aria-label="Next service" className="rounded-full border border-[#716d78] p-3 hover:border-[#f7f5ff]">
+                <ArrowRight size={20} />
+              </button>
+            </div>
           </div>
           <div className="mt-12 grid gap-4 md:grid-cols-3">
             {specialties.map(([title, text, Icon], index) => {
               const SpecialtyIcon = Icon as typeof Braces
-              return <article key={title as string} className="flex min-h-72 flex-col justify-between rounded-2xl border border-[#7727ff] bg-[linear-gradient(145deg,#26104e,#6b14dc_55%,#db15dd)] p-7 shadow-[inset_0_1px_0_#ffffff22]"><div className="flex items-start justify-between"><SpecialtyIcon size={44} /><ArrowUpRight size={22} /></div><div><p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#eadcff]">0{index + 1}</p><h3 className="text-2xl font-bold">{title as string}</h3><p className="mt-2 text-sm text-[#e7dcff]">{text as string}</p></div></article>
+              return (
+                <article key={title as string} className="flex min-h-72 flex-col justify-between rounded-2xl border border-[#7727ff] bg-[linear-gradient(145deg,#26104e,#6b14dc_55%,#db15dd)] p-7 shadow-[inset_0_1px_0_#ffffff22]">
+                  <div className="flex items-start justify-between">
+                    <SpecialtyIcon size={44} />
+                    <ArrowUpRight size={22} />
+                  </div>
+                  <div>
+                    <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#eadcff]">0{index + 1}</p>
+                    <h3 className="text-2xl font-bold">{title as string}</h3>
+                    <p className="mt-2 text-sm text-[#e7dcff]">{text as string}</p>
+                  </div>
+                </article>
+              )
             })}
           </div>
         </div>
@@ -213,11 +422,16 @@ export default function Page() {
 
       <section id="contact" className="px-6 py-28 text-center">
         <Globe2 className="mx-auto text-[#7727ff]" size={36} />
-        <h2 className="mx-auto mt-6 max-w-3xl text-balance text-4xl font-black tracking-tight sm:text-6xl">Have an idea? Let&apos;s make it impossible to ignore.</h2>
-        <p className="mx-auto mt-5 max-w-xl text-[#aaa6b5]">Tell us what you&apos;re building. We&apos;ll bring the strategy, design, development, and growth expertise.</p>
-        <a href="/contact" className="mt-9 inline-flex items-center gap-2 rounded-lg bg-[#6417ed] px-8 py-4 font-bold hover:bg-[#7727ff]">Start a Project <ArrowUpRight size={19} /></a>
+        <h2 className="mx-auto mt-6 max-w-3xl text-balance text-4xl font-black tracking-tight sm:text-6xl">
+          Have an idea? Let&apos;s make it impossible to ignore.
+        </h2>
+        <p className="mx-auto mt-5 max-w-xl text-[#aaa6b5]">
+          Tell us what you&apos;re building. We&apos;ll bring the strategy, design, development, and growth expertise.
+        </p>
+        <a href="/contact" className="mt-9 inline-flex items-center gap-2 rounded-lg bg-[#6417ed] px-8 py-4 font-bold hover:bg-[#7727ff]">
+          Start a Project <ArrowUpRight size={19} />
+        </a>
       </section>
-
     </main>
   )
 }
