@@ -456,7 +456,7 @@ export default function Page() {
         <div className="hero-copy relative z-10 max-w-4xl">
           <p className="hero-reveal mb-5 text-sm font-bold uppercase tracking-[0.22em] text-[#a77aff]">{headline}</p>
           <h1 className="hero-reveal hero-delay-1 text-balance text-4xl font-black leading-[1.08] tracking-[-0.045em] min-[380px]:text-5xl sm:text-6xl lg:text-7xl">
-            {heroHeadline}.<br />Building <span className="hero-gradient-text">{heroSubheadline}.</span>
+            {heroHeadline}.<br />Today <span className="hero-gradient-text">{heroSubheadline}.</span>
           </h1>
           <p className="hero-reveal hero-delay-2 mx-auto mt-7 max-w-2xl text-pretty text-base leading-relaxed text-[#c2becb] sm:text-lg">
             {description}
