@@ -56,7 +56,13 @@ import {
   Layout,
   Lock,
   LogIn,
-  Shield
+  Shield,
+  Building2,
+  MapPin,
+  Instagram,
+  Facebook,
+  Youtube,
+  Link as LinkIcon
 } from 'lucide-react'
 
 // Custom Social Media Icons
@@ -126,6 +132,27 @@ interface MediaAsset {
   metadata?: any
 }
 
+interface SiteSettings {
+  site_name: string
+  site_description: string
+  contact_email: string
+  contact_phone: string
+  address: string
+  social_links: {
+    linkedin?: string
+    twitter?: string
+    github?: string
+    instagram?: string
+    facebook?: string
+    youtube?: string
+  }
+  seo_settings: {
+    meta_title: string
+    meta_description: string
+    google_analytics_id: string
+  }
+}
+
 // Navigation items
 const navigationSections = [
   {
@@ -152,6 +179,12 @@ const navigationSections = [
       { id: 'contacts', label: 'Inbox', icon: Inbox },
     ]
   },
+  {
+    title: 'Configuration',
+    items: [
+      { id: 'settings', label: 'Site Settings', icon: Settings },
+    ]
+  },
 ]
 
 const categories = ['FINTECH', 'E-COMMERCE', 'ARTIFICIAL INTELLIGENCE', 'SAAS', 'HEALTHCARE', 'EDUCATION', 'REAL_ESTATE', 'LOGISTICS', 'BEAUTY', 'AUTOMOTIVE', 'NON_PROFIT']
@@ -160,6 +193,14 @@ const contactStatuses = ['new', 'contacted', 'qualified', 'proposal_sent', 'won'
 const faqCategories = ['GENERAL', 'SERVICES', 'PRICING', 'PROCESS', 'TECHNICAL', 'SUPPORT', 'PARTNERSHIP']
 const sectionTypes = ['OVERVIEW', 'CHALLENGE', 'SOLUTION', 'RESULTS', 'TECH_STACK', 'PROCESS', 'QUOTE', 'CUSTOM']
 const bucketNames = ['project-images', 'project-media', 'brand-assets', 'team-photos', 'project-documents', 'project-videos']
+
+// Setting keys for the site_settings table
+const SETTING_KEYS = {
+  SITE_INFO: 'site_info',
+  CONTACT_INFO: 'contact_info',
+  SOCIAL_LINKS: 'social_links',
+  SEO_SETTINGS: 'seo_settings'
+}
 
 export default function AdminPanel() {
   // Authentication state
@@ -189,6 +230,7 @@ export default function AdminPanel() {
   const [teamMembers, setTeamMembers] = useState<any[]>([])
   const [faqs, setFAQs] = useState<any[]>([])
   const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([])
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null)
 
   // UI states
   const [showModal, setShowModal] = useState(false)
@@ -242,7 +284,7 @@ export default function AdminPanel() {
     setLoading(true)
     setError(null)
     try {
-      const [projectsRes, servicesRes, testimonialsRes, blogRes, contactsRes, teamRes, faqsRes] = await Promise.all([
+      const [projectsRes, servicesRes, testimonialsRes, blogRes, contactsRes, teamRes, faqsRes, settingsRes] = await Promise.all([
         supabase.from('projects').select('*').order('created_at', { ascending: false }),
         supabase.from('services').select('*').order('sort_order'),
         supabase.from('testimonials').select('*').order('created_at', { ascending: false }),
@@ -250,6 +292,7 @@ export default function AdminPanel() {
         supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }),
         supabase.from('team_members').select('*').order('sort_order'),
         supabase.from('faqs').select('*').order('sort_order'),
+        supabase.from('site_settings').select('*').eq('is_active', true),
       ])
 
       setProjects(projectsRes.data || [])
@@ -259,6 +302,68 @@ export default function AdminPanel() {
       setContacts(contactsRes.data || [])
       setTeamMembers(teamRes.data || [])
       setFAQs(faqsRes.data || [])
+
+      // Parse site settings from key-value pairs
+      if (settingsRes.data && settingsRes.data.length > 0) {
+        const parsedSettings: SiteSettings = {
+          site_name: 'DS Softwares',
+          site_description: '',
+          contact_email: '',
+          contact_phone: '',
+          address: '',
+          social_links: {},
+          seo_settings: {
+            meta_title: '',
+            meta_description: '',
+            google_analytics_id: ''
+          }
+        }
+
+        settingsRes.data.forEach((setting: any) => {
+          const value = setting.setting_value
+          switch (setting.setting_key) {
+            case SETTING_KEYS.SITE_INFO:
+              parsedSettings.site_name = value.site_name || parsedSettings.site_name
+              parsedSettings.site_description = value.site_description || ''
+              break
+            case SETTING_KEYS.CONTACT_INFO:
+              parsedSettings.contact_email = value.contact_email || ''
+              parsedSettings.contact_phone = value.contact_phone || ''
+              parsedSettings.address = value.address || ''
+              break
+            case SETTING_KEYS.SOCIAL_LINKS:
+              parsedSettings.social_links = value
+              break
+            case SETTING_KEYS.SEO_SETTINGS:
+              parsedSettings.seo_settings = value
+              break
+          }
+        })
+
+        setSiteSettings(parsedSettings)
+      } else {
+        // Set default settings
+        setSiteSettings({
+          site_name: 'DS Softwares',
+          site_description: 'Digital Solutions & Software Development',
+          contact_email: 'contact@dssoftwares.in',
+          contact_phone: '+91 1234567890',
+          address: '',
+          social_links: {
+            linkedin: '',
+            twitter: '',
+            github: '',
+            instagram: '',
+            facebook: '',
+            youtube: ''
+          },
+          seo_settings: {
+            meta_title: 'DS Softwares - Digital Solutions',
+            meta_description: 'We build innovative digital solutions for businesses',
+            google_analytics_id: ''
+          }
+        })
+      }
     } catch (err: any) {
       console.error('Error fetching data:', err)
       setError(err.message || 'Failed to fetch data')
@@ -446,6 +551,82 @@ export default function AdminPanel() {
       await fetchAllData()
     } catch (err: any) {
       showNotification('error', err.message || 'Failed to save item')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSaveSettings = async (settings: SiteSettings) => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const settingsToSave = [
+        {
+          setting_key: SETTING_KEYS.SITE_INFO,
+          setting_value: {
+            site_name: settings.site_name,
+            site_description: settings.site_description
+          },
+          description: 'Site information settings',
+          is_active: true
+        },
+        {
+          setting_key: SETTING_KEYS.CONTACT_INFO,
+          setting_value: {
+            contact_email: settings.contact_email,
+            contact_phone: settings.contact_phone,
+            address: settings.address
+          },
+          description: 'Contact information settings',
+          is_active: true
+        },
+        {
+          setting_key: SETTING_KEYS.SOCIAL_LINKS,
+          setting_value: settings.social_links,
+          description: 'Social media links',
+          is_active: true
+        },
+        {
+          setting_key: SETTING_KEYS.SEO_SETTINGS,
+          setting_value: settings.seo_settings,
+          description: 'SEO settings',
+          is_active: true
+        }
+      ]
+
+      // Upsert each setting
+      for (const setting of settingsToSave) {
+        const { data: existingSetting } = await supabase
+          .from('site_settings')
+          .select('id')
+          .eq('setting_key', setting.setting_key)
+          .single()
+
+        if (existingSetting) {
+          const { error: updateError } = await supabase
+            .from('site_settings')
+            .update({
+              setting_value: setting.setting_value,
+              description: setting.description,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingSetting.id)
+
+          if (updateError) throw updateError
+        } else {
+          const { error: insertError } = await supabase
+            .from('site_settings')
+            .insert([setting])
+
+          if (insertError) throw insertError
+        }
+      }
+
+      setSiteSettings(settings)
+      showNotification('success', 'Site settings updated successfully')
+    } catch (err: any) {
+      showNotification('error', err.message || 'Failed to update settings')
     } finally {
       setLoading(false)
     }
@@ -777,7 +958,7 @@ export default function AdminPanel() {
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#131318] border-r border-[#2a2a35] transform transition-transform duration-300 ease-in-out ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0`}>
+      } lg:translate-x-0 flex flex-col`}>
         {/* Logo */}
         <div className="flex items-center justify-between h-16 px-6 border-b border-[#2a2a35] bg-gradient-to-r from-[#1a1a24] to-[#131318]">
           <div className="flex items-center gap-3">
@@ -813,7 +994,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-4 overflow-y-auto h-[calc(100vh-180px)] scrollbar-thin">
+        <nav className="flex-1 p-4 space-y-4 overflow-y-auto scrollbar-thin">
           {navigationSections.map((section) => (
             <div key={section.title}>
               <p className="px-4 mb-2 text-xs font-semibold text-[#a0a0b0] uppercase tracking-wider">
@@ -851,11 +1032,7 @@ export default function AdminPanel() {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#2a2a35] bg-[#1a1a24]/50">
-          <button className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-[#a0a0b0] hover:bg-[#2a2a35] hover:text-white transition-colors">
-            <Settings size={16} />
-            Settings
-          </button>
+        <div className="p-4 border-t border-[#2a2a35] bg-[#1a1a24]/50">
           <button 
             onClick={handleLogout}
             className="w-full flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 transition-colors"
@@ -957,11 +1134,11 @@ export default function AdminPanel() {
                         <p className="text-sm font-medium">Admin User</p>
                         <p className="text-xs text-[#a0a0b0]">admin@dssoftwares.in</p>
                       </div>
-                      <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#1a1a24] text-sm">
-                        <User size={14} /> Profile
-                      </button>
-                      <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#1a1a24] text-sm">
-                        <Settings size={14} /> Settings
+                      <button 
+                        onClick={() => { setActiveTab('settings'); setUserMenuOpen(false); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#1a1a24] text-sm"
+                      >
+                        <Settings size={14} /> Site Settings
                       </button>
                       <div className="border-t border-[#2a2a35] my-2" />
                       <button 
@@ -1098,6 +1275,13 @@ export default function AdminPanel() {
               fileInputRef={fileInputRef}
             />
           )}
+
+          {activeTab === 'settings' && (
+            <SettingsTab
+              settings={siteSettings}
+              onSave={handleSaveSettings}
+            />
+          )}
         </main>
       </div>
 
@@ -1112,6 +1296,293 @@ export default function AdminPanel() {
           teamMembers={teamMembers}
         />
       )}
+    </div>
+  )
+}
+
+// SettingsTab Component
+function SettingsTab({ settings, onSave }: { settings: SiteSettings | null, onSave: (settings: SiteSettings) => Promise<void> }) {
+  const [formData, setFormData] = useState<SiteSettings>(settings || {
+    site_name: 'DS Softwares',
+    site_description: 'Digital Solutions & Software Development',
+    contact_email: 'contact@dssoftwares.in',
+    contact_phone: '+91 1234567890',
+    address: 'Your Address Here',
+    social_links: {
+      linkedin: '',
+      twitter: '',
+      github: '',
+      instagram: '',
+      facebook: '',
+      youtube: ''
+    },
+    seo_settings: {
+      meta_title: 'DS Softwares - Digital Solutions',
+      meta_description: 'We build innovative digital solutions for businesses',
+      google_analytics_id: ''
+    }
+  })
+
+  const [activeSection, setActiveSection] = useState('general')
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (settings) {
+      setFormData(settings)
+    }
+  }, [settings])
+
+  const handleChange = (field: string, value: any) => {
+    setFormData({ ...formData, [field]: value })
+  }
+
+  const handleSocialChange = (platform: string, value: string) => {
+    setFormData({
+      ...formData,
+      social_links: {
+        ...formData.social_links,
+        [platform]: value
+      }
+    })
+  }
+
+  const handleSEOChange = (field: string, value: string) => {
+    setFormData({
+      ...formData,
+      seo_settings: {
+        ...formData.seo_settings,
+        [field]: value
+      }
+    })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSaving(true)
+    await onSave(formData)
+    setIsSaving(false)
+  }
+
+  const sections = [
+    { id: 'general', label: 'General', icon: Building2 },
+    { id: 'contact', label: 'Contact Info', icon: Mail },
+    { id: 'social', label: 'Social Links', icon: LinkIcon },
+    { id: 'seo', label: 'SEO Settings', icon: Search },
+  ]
+
+  return (
+    <div className="space-y-6 fade-in">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold">Site Settings</h2>
+        <p className="text-sm text-[#a0a0b0] mt-1">Configure your portfolio website settings</p>
+      </div>
+
+      {/* Section Navigation */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            onClick={() => setActiveSection(section.id)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
+              activeSection === section.id
+                ? 'bg-gradient-to-r from-[#7727ff] to-[#6417ed] text-white'
+                : 'bg-[#131318] text-[#a0a0b0] hover:bg-[#1a1a24]'
+            }`}
+          >
+            <section.icon size={16} />
+            {section.label}
+          </button>
+        ))}
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* General Settings */}
+        {activeSection === 'general' && (
+          <div className="glass-effect rounded-2xl border border-[#2a2a35] p-6 space-y-4 fade-in">
+            <h3 className="font-semibold text-lg text-[#a77aff]">General Information</h3>
+            <div>
+              <label className="block text-sm font-medium mb-2">Site Name</label>
+              <input
+                type="text"
+                value={formData.site_name}
+                onChange={(e) => handleChange('site_name', e.target.value)}
+                className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Site Description</label>
+              <textarea
+                value={formData.site_description}
+                onChange={(e) => handleChange('site_description', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Contact Settings */}
+        {activeSection === 'contact' && (
+          <div className="glass-effect rounded-2xl border border-[#2a2a35] p-6 space-y-4 fade-in">
+            <h3 className="font-semibold text-lg text-[#a77aff]">Contact Information</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Contact Email</label>
+                <input
+                  type="email"
+                  value={formData.contact_email}
+                  onChange={(e) => handleChange('contact_email', e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Contact Phone</label>
+                <input
+                  type="tel"
+                  value={formData.contact_phone}
+                  onChange={(e) => handleChange('contact_phone', e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Address</label>
+              <textarea
+                value={formData.address}
+                onChange={(e) => handleChange('address', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Social Links */}
+        {activeSection === 'social' && (
+          <div className="glass-effect rounded-2xl border border-[#2a2a35] p-6 space-y-4 fade-in">
+            <h3 className="font-semibold text-lg text-[#a77aff]">Social Media Links</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">LinkedIn</label>
+                <input
+                  type="url"
+                  value={formData.social_links.linkedin || ''}
+                  onChange={(e) => handleSocialChange('linkedin', e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+                  placeholder="https://linkedin.com/company/..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Twitter</label>
+                <input
+                  type="url"
+                  value={formData.social_links.twitter || ''}
+                  onChange={(e) => handleSocialChange('twitter', e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+                  placeholder="https://twitter.com/..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">GitHub</label>
+                <input
+                  type="url"
+                  value={formData.social_links.github || ''}
+                  onChange={(e) => handleSocialChange('github', e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+                  placeholder="https://github.com/..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Instagram</label>
+                <input
+                  type="url"
+                  value={formData.social_links.instagram || ''}
+                  onChange={(e) => handleSocialChange('instagram', e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+                  placeholder="https://instagram.com/..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Facebook</label>
+                <input
+                  type="url"
+                  value={formData.social_links.facebook || ''}
+                  onChange={(e) => handleSocialChange('facebook', e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+                  placeholder="https://facebook.com/..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">YouTube</label>
+                <input
+                  type="url"
+                  value={formData.social_links.youtube || ''}
+                  onChange={(e) => handleSocialChange('youtube', e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+                  placeholder="https://youtube.com/@..."
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* SEO Settings */}
+        {activeSection === 'seo' && (
+          <div className="glass-effect rounded-2xl border border-[#2a2a35] p-6 space-y-4 fade-in">
+            <h3 className="font-semibold text-lg text-[#a77aff]">SEO Settings</h3>
+            <div>
+              <label className="block text-sm font-medium mb-2">Meta Title</label>
+              <input
+                type="text"
+                value={formData.seo_settings.meta_title}
+                onChange={(e) => handleSEOChange('meta_title', e.target.value)}
+                className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Meta Description</label>
+              <textarea
+                value={formData.seo_settings.meta_description}
+                onChange={(e) => handleSEOChange('meta_description', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Google Analytics ID</label>
+              <input
+                type="text"
+                value={formData.seo_settings.google_analytics_id}
+                onChange={(e) => handleSEOChange('google_analytics_id', e.target.value)}
+                className="w-full px-4 py-2.5 bg-[#1a1a24] border border-[#2a2a35] rounded-xl focus:outline-none focus:border-[#7727ff] transition-colors"
+                placeholder="UA-XXXXXXXX-X or G-XXXXXXXXXX"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Save Button */}
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#7727ff] to-[#6417ed] rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save size={16} />
+                Save Settings
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
