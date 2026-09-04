@@ -394,7 +394,7 @@ export default function Page() {
         )}
       </header>
 
-      <section id="home" className="relative flex min-h-[900px] flex-col items-center px-4 pt-36 text-center min-[380px]:pt-40 sm:min-h-[860px] sm:px-6 sm:pt-48 lg:pt-52">
+      <section id="home" className="relative flex min-h-[950px] sm:min-h-[900px] lg:min-h-[860px] flex-col items-center px-4 pt-36 text-center min-[380px]:pt-40 sm:px-6 sm:pt-48 lg:pt-52">
         <div aria-hidden="true" className="hero-halo pointer-events-none absolute left-1/2 top-28 h-[500px] w-[760px] rounded-[50%] border-[16px] border-[#efe9ff] bg-[radial-gradient(ellipse_at_center,#6d1fff_0%,#251047_46%,#09080b_70%)] shadow-[0_0_65px_20px_#7727ff,0_0_26px_8px_#f1e9ff] sm:top-32 sm:h-[570px] sm:w-[1000px] sm:border-[20px] lg:top-36 lg:h-[610px] lg:w-[1180px] lg:border-[24px]" />
         <div className="hero-copy relative z-10 max-w-4xl">
           <p className="hero-reveal mb-5 text-sm font-bold uppercase tracking-[0.22em] text-[#a77aff]">{headline}</p>
@@ -409,7 +409,7 @@ export default function Page() {
             <a href="#work" className="rounded-lg border border-[#817b89] bg-[#111013]/70 px-7 py-4 text-sm font-bold transition-colors hover:border-[#f7f5ff]">{ctaSecondary}</a>
           </div>
         </div>
-        <div className="hero-panel hero-reveal hero-delay-4 absolute bottom-6 z-20 grid w-[calc(100%-2rem)] max-w-5xl grid-cols-2 items-center gap-4 rounded-2xl border border-[#716d78] bg-[#111013]/95 px-4 py-5 text-left shadow-2xl sm:bottom-8 sm:w-[calc(100%-3rem)] sm:grid-cols-4 sm:gap-6 sm:px-7 sm:py-6 lg:grid-cols-5">
+        <div className="hero-panel hero-reveal hero-delay-4 absolute bottom-2 sm:bottom-6 lg:bottom-8 z-20 grid w-[calc(100%-2rem)] max-w-5xl grid-cols-2 items-center gap-4 rounded-2xl border border-[#716d78] bg-[#111013]/95 px-4 py-5 text-left shadow-2xl sm:grid-cols-4 sm:gap-6 sm:px-7 sm:py-6 lg:grid-cols-5">
           <div className="col-span-2 flex items-center gap-5 border-[#5b5662] lg:col-span-1 lg:border-r">
             <div>
               <div className="flex text-[#f6ce46]">{[1,2,3,4,5].map(n => <Star key={n} size={11} fill="currentColor" />)}</div>
@@ -423,23 +423,24 @@ export default function Page() {
         </div>
       </section>
 
+      {/* Services Section - Fixed responsive issues */}
       <section id="services" className="relative px-4 py-20 sm:px-6 sm:py-24 lg:py-28">
         <div aria-hidden="true" className="absolute -left-52 top-0 h-full w-96 bg-[#3b0c85] opacity-30 blur-3xl" />
-        <div className="relative mx-auto max-w-5xl">
-          <div className="text-center">
-            <h2 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">Everything your brand needs. <span className="text-[#7727ff]">One team.</span></h2>
-            <p className="mx-auto mt-4 max-w-2xl text-[#aaa6b5]">From the first idea to launch and ongoing growth, we handle your complete digital journey.</p>
+        <div className="relative mx-auto max-w-7xl">
+          <div className="text-center px-4 sm:px-6">
+            <h2 className="text-balance text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">Everything your brand needs. <span className="text-[#7727ff]">One team.</span></h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm sm:text-base text-[#aaa6b5]">From the first idea to launch and ongoing growth, we handle your complete digital journey.</p>
           </div>
-          <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-14 grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {services.map((service, index) => {
               const ServiceIcon = service.icon && iconMap[service.icon] ? iconMap[service.icon] : Code2
               return (
-                <article key={service.id} className={`group flex min-h-52 flex-col justify-between rounded-2xl border p-7 transition-transform hover:-translate-y-1 ${index === 1 ? 'border-[#8b4cff] bg-[linear-gradient(135deg,#4c0bc7,#7a18f5)] shadow-[0_18px_60px_#6417ed35]' : 'border-[#514d57] bg-[#111013]'}`}>
+                <article key={service.id} className={`group flex min-h-52 flex-col justify-between rounded-2xl border p-6 sm:p-7 transition-transform hover:-translate-y-1 ${index === 1 ? 'border-[#8b4cff] bg-[linear-gradient(135deg,#4c0bc7,#7a18f5)] shadow-[0_18px_60px_#6417ed35]' : 'border-[#514d57] bg-[#111013]'}`}>
                   <div className="flex items-start justify-between">
-                    <ServiceIcon size={38} strokeWidth={1.8} className={index === 1 ? 'text-[#f7f5ff]' : 'text-[#7727ff]'} />
+                    <ServiceIcon size={32} strokeWidth={1.8} className={index === 1 ? 'text-[#f7f5ff]' : 'text-[#7727ff]'} />
                   </div>
                   <div>
-                    <h3 className="max-w-52 text-lg font-bold leading-tight">{service.name}</h3>
+                    <h3 className="max-w-full sm:max-w-52 text-lg font-bold leading-tight">{service.name}</h3>
                     <p className={`mt-3 text-sm leading-relaxed ${index === 1 ? 'text-[#e7dcff]' : 'text-[#aaa6b5]'}`}>
                       {service.description || `${service.name} services tailored to your needs.`}
                     </p>
@@ -451,47 +452,49 @@ export default function Page() {
         </div>
       </section>
 
-      <section id="about" className="bg-[linear-gradient(110deg,#1f075c,#40109a)] px-6 py-24">
-        <div className="mx-auto max-w-5xl text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Built on Trust. Driven by Results.</h2>
-          <p className="mx-auto mt-4 max-w-xl text-[#c9bee1]">We don&apos;t just deliver work — we build long-term partnerships grounded in speed, clarity, and outcomes.</p>
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* About Section - Fixed responsive issues */}
+      <section id="about" className="bg-[linear-gradient(110deg,#1f075c,#40109a)] px-4 py-20 sm:px-6 sm:py-24">
+        <div className="mx-auto max-w-7xl text-center">
+          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">Built on Trust. Driven by Results.</h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm sm:text-base text-[#c9bee1]">We don&apos;t just deliver work — we build long-term partnerships grounded in speed, clarity, and outcomes.</p>
+          <div className="mt-12 grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ['01', '10+ Years of Tech Expertise'],
               ['02', 'Transparent Agile Process'],
               ['03', 'Dedicated Full-Stack Teams'],
               ['04', '24/7 Support & Maintenance'],
             ].map(([number, label]) => (
-              <article key={number} className="min-h-56 rounded-2xl border border-[#8970bd] bg-[#2d0c75]/45 p-6 text-left">
+              <article key={number} className="min-h-48 rounded-2xl border border-[#8970bd] bg-[#2d0c75]/45 p-5 sm:p-6 text-left">
                 <div className="flex items-start justify-between">
-                  <span className="text-5xl font-extrabold">{number}</span>
+                  <span className="text-3xl sm:text-4xl lg:text-5xl font-extrabold">{number}</span>
                 </div>
-                <h3 className="mt-8 text-xl font-bold leading-snug">{label}</h3>
+                <h3 className="mt-6 sm:mt-8 text-base sm:text-lg lg:text-xl font-bold leading-snug">{label}</h3>
               </article>
             ))}
           </div>
         </div>
       </section>
 
+      {/* Work Section - Fixed responsive issues */}
       <section id="work" className="relative px-4 py-20 sm:px-6 sm:py-24 lg:py-28">
         <div aria-hidden="true" className="absolute -right-44 inset-y-0 w-96 bg-[#3b0c85] opacity-25 blur-3xl" />
-        <div className="relative mx-auto max-w-5xl text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Real Impact. <span className="text-[#7727ff]">Proven Results.</span></h2>
-          <p className="mx-auto mt-4 max-w-xl text-[#aaa6b5]">Explore how we&apos;ve helped startups and established businesses launch, scale, and stand out.</p>
-          <div className="mt-14 grid gap-4 text-left md:grid-cols-3">
+        <div className="relative mx-auto max-w-7xl text-center">
+          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">Real Impact. <span className="text-[#7727ff]">Proven Results.</span></h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm sm:text-base text-[#aaa6b5]">Explore how we&apos;ve helped startups and established businesses launch, scale, and stand out.</p>
+          <div className="mt-14 grid gap-4 sm:gap-6 text-left grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {displayProjects.map(({ tag, title, text, slug, icon: Icon, metrics }) => (
               <a 
                 aria-label={`View ${title} case study`} 
                 href={`/projects/${slug}`} 
                 key={slug} 
-                className="group rounded-2xl border border-[#514d57] bg-[#111013] p-7 transition-all hover:-translate-y-1 hover:border-[#7727ff] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9a5cff]"
+                className="group rounded-2xl border border-[#514d57] bg-[#111013] p-5 sm:p-7 transition-all hover:-translate-y-1 hover:border-[#7727ff] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9a5cff]"
               >
-                <div className="mb-10 flex items-start justify-between">
-                  <Icon size={28} className="text-[#7727ff]" />
-                  <ArrowUpRight size={22} className="text-[#716d78] transition-colors group-hover:text-[#9a5cff]" />
+                <div className="mb-8 sm:mb-10 flex items-start justify-between">
+                  <Icon size={24} className="text-[#7727ff]" />
+                  <ArrowUpRight size={20} className="text-[#716d78] transition-colors group-hover:text-[#9a5cff]" />
                 </div>
                 <p className="text-xs font-bold tracking-[0.18em] text-[#7727ff]">{tag}</p>
-                <h3 className="mt-5 text-xl font-bold">{title}</h3>
+                <h3 className="mt-4 sm:mt-5 text-lg sm:text-xl font-bold">{title}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-[#aaa6b5]">{text}</p>
                 
                 {metrics && metrics.length > 0 && (
@@ -511,19 +514,20 @@ export default function Page() {
               </a>
             ))}
           </div>
-          <a href="/projects" className="mt-12 inline-flex items-center gap-2 rounded-lg bg-[#6417ed] px-8 py-4 text-sm font-bold transition-colors hover:bg-[#7727ff]">
+          <a href="/projects" className="mt-12 inline-flex items-center gap-2 rounded-lg bg-[#6417ed] px-6 sm:px-8 py-3 sm:py-4 text-sm font-bold transition-colors hover:bg-[#7727ff]">
             Explore Case Studies <ArrowUpRight size={17} />
           </a>
         </div>
       </section>
 
+      {/* Testimonials Section - Fixed responsive issues */}
       {testimonials.length > 0 && (
-        <section id="testimonials" className="px-6 py-24 bg-[#111013]">
-          <div className="mx-auto max-w-5xl text-center">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">What Our <span className="text-[#7727ff]">Clients Say</span></h2>
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
+        <section id="testimonials" className="px-4 py-20 sm:px-6 sm:py-24 bg-[#111013]">
+          <div className="mx-auto max-w-7xl text-center">
+            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">What Our <span className="text-[#7727ff]">Clients Say</span></h2>
+            <div className="mt-12 grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               {testimonials.map((testimonial, index) => (
-                <article key={index} className="rounded-2xl border border-[#514d57] bg-[#1a191d] p-7 text-left">
+                <article key={index} className="rounded-2xl border border-[#514d57] bg-[#1a191d] p-5 sm:p-7 text-left">
                   {testimonial.rating && (
                     <div className="mb-4 flex text-[#f6ce46]">
                       {[1,2,3,4,5].map(n => (
@@ -549,21 +553,23 @@ export default function Page() {
         </section>
       )}
 
-      <section id="contact" className="px-6 py-28 text-center">
-        <Globe2 className="mx-auto text-[#7727ff]" size={36} />
-        <h2 className="mx-auto mt-6 max-w-3xl text-balance text-4xl font-black tracking-tight sm:text-6xl">
+      {/* Contact Section - Fixed responsive issues */}
+      <section id="contact" className="px-4 py-20 sm:px-6 sm:py-24 lg:py-28 text-center">
+        <Globe2 className="mx-auto text-[#7727ff]" size={32} />
+        <h2 className="mx-auto mt-6 max-w-3xl text-balance text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
           Have an idea? Let&apos;s make it impossible to ignore.
         </h2>
-        <p className="mx-auto mt-5 max-w-xl text-[#aaa6b5]">
+        <p className="mx-auto mt-5 max-w-xl text-sm sm:text-base text-[#aaa6b5]">
           Tell us what you&apos;re building. We&apos;ll bring the strategy, design, development, and growth expertise.
         </p>
-        <a href="/contact" className="mt-9 inline-flex items-center gap-2 rounded-lg bg-[#6417ed] px-8 py-4 font-bold hover:bg-[#7727ff]">
+        <a href="/contact" className="mt-9 inline-flex items-center gap-2 rounded-lg bg-[#6417ed] px-6 sm:px-8 py-3 sm:py-4 font-bold hover:bg-[#7727ff]">
           Start a Project
         </a>
       </section>
 
+      {/* Footer - Fixed responsive issues */}
       <footer className="border-t border-[#211d27] bg-[#09080b] px-4 py-12 sm:px-6 sm:py-16">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-7xl">
           <div className="flex flex-col justify-between gap-8 border-b border-[#211d27] pb-10 sm:gap-10 sm:pb-12 lg:flex-row lg:items-end">
             <div className="max-w-xl">
               <a href="/" aria-label="DS Softwares home" className="text-2xl font-black tracking-[-0.04em]">
@@ -580,7 +586,7 @@ export default function Page() {
               Start a project →
             </a>
           </div>
-          <div className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-8 sm:gap-10 py-12 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9a5cff]">Services</p>
               <div className="mt-5 flex flex-col gap-3 text-sm text-[#aaa6b5]">
