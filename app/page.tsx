@@ -100,6 +100,10 @@ interface SiteSettings {
     subheadline?: string
     review_count?: string
     cta_secondary?: string
+    stats?: Array<{
+      label?: string
+      number?: string
+    }>
     [key: string]: any
   }
   description: string | null
@@ -122,6 +126,11 @@ interface ProjectDisplay {
   slug: string
   icon: any
   metrics?: Array<{ label: string; value: string | number }>
+}
+
+interface StatsDisplay {
+  number: string
+  label: string
 }
 
 const iconMap: Record<string, any> = {
@@ -152,12 +161,21 @@ const categoryIconMap: Record<string, any> = {
   'NON_PROFIT': Globe2,
 }
 
+// Default stats as fallback
+const defaultStats: StatsDisplay[] = [
+  { number: '10+', label: 'Years of Tech Expertise' },
+  { number: '02', label: 'Transparent Agile Process' },
+  { number: '03', label: 'Dedicated Full-Stack Teams' },
+  { number: '24/7', label: 'Support & Maintenance' },
+]
+
 export default function Page() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [projects, setProjects] = useState<Project[]>([])
   const [services, setServices] = useState<Service[]>([])
   const [testimonials, setTestimonials] = useState<TestimonialDisplay[]>([])
   const [siteSettings, setSiteSettings] = useState<any>(null)
+  const [stats, setStats] = useState<StatsDisplay[]>(defaultStats)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -175,21 +193,60 @@ export default function Page() {
 
         if (settingsError) throw settingsError
 
+        console.log('All settings data:', settingsData) // Debug log
+
         if (settingsData && settingsData.length > 0) {
           // Merge all settings into one object
           const mergedSettings: any = {}
+          
           settingsData.forEach((setting: SiteSettings) => {
+            console.log('Processing setting:', setting.setting_key, setting.setting_value) // Debug log
+            
             if (setting.setting_value) {
-              // If setting_value is an object, merge it
-              if (typeof setting.setting_value === 'object' && !Array.isArray(setting.setting_value)) {
+              // If setting_value is an array (like your stats data)
+              if (Array.isArray(setting.setting_value)) {
+                // Check if this is the stats/trust data
+                if (setting.setting_key.toLowerCase().includes('trust') || 
+                    setting.setting_key.toLowerCase().includes('stats') ||
+                    setting.setting_key.toLowerCase().includes('landing')) {
+                  mergedSettings.stats = setting.setting_value
+                } else {
+                  mergedSettings[setting.setting_key] = setting.setting_value
+                }
+              }
+              // If setting_value is an object
+              else if (typeof setting.setting_value === 'object') {
+                // Check if the object itself contains stats
+                if (setting.setting_value.stats) {
+                  mergedSettings.stats = setting.setting_value.stats
+                }
                 Object.assign(mergedSettings, setting.setting_value)
-              } else {
+              }
+              // If it's a primitive value
+              else {
                 mergedSettings[setting.setting_key] = setting.setting_value
               }
             }
           })
+          
           setSiteSettings(mergedSettings)
-          console.log('Site settings loaded:', mergedSettings)
+          
+          // Set stats from settings if available
+          if (mergedSettings.stats && Array.isArray(mergedSettings.stats)) {
+            const formattedStats = mergedSettings.stats
+              .filter((stat: any) => stat && (stat.label || stat.number))
+              .map((stat: any) => ({
+                number: stat.number || stat.value || '',
+                label: stat.label || stat.title || '',
+              }))
+            
+            if (formattedStats.length > 0) {
+              setStats(formattedStats)
+              console.log('Stats loaded from DB:', formattedStats) // Debug log
+            }
+          }
+          
+          console.log('Merged settings:', mergedSettings) // Debug log
         }
 
         // Fetch published projects with related data
@@ -423,7 +480,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Services Section - Fixed responsive issues */}
+      {/* Services Section */}
       <section id="services" className="relative px-4 py-20 sm:px-6 sm:py-24 lg:py-28">
         <div aria-hidden="true" className="absolute -left-52 top-0 h-full w-96 bg-[#3b0c85] opacity-30 blur-3xl" />
         <div className="relative mx-auto max-w-7xl">
@@ -452,30 +509,25 @@ export default function Page() {
         </div>
       </section>
 
-      {/* About Section - Fixed responsive issues */}
+      {/* About Section - Dynamic Stats from Database */}
       <section id="about" className="bg-[linear-gradient(110deg,#1f075c,#40109a)] px-4 py-20 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-7xl text-center">
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">Built on Trust. Driven by Results.</h2>
           <p className="mx-auto mt-4 max-w-xl text-sm sm:text-base text-[#c9bee1]">We don&apos;t just deliver work — we build long-term partnerships grounded in speed, clarity, and outcomes.</p>
           <div className="mt-12 grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              ['01', '10+ Years of Tech Expertise'],
-              ['02', 'Transparent Agile Process'],
-              ['03', 'Dedicated Full-Stack Teams'],
-              ['04', '24/7 Support & Maintenance'],
-            ].map(([number, label]) => (
-              <article key={number} className="min-h-48 rounded-2xl border border-[#8970bd] bg-[#2d0c75]/45 p-5 sm:p-6 text-left">
+            {stats.map((stat, index) => (
+              <article key={index} className="min-h-48 rounded-2xl border border-[#8970bd] bg-[#2d0c75]/45 p-5 sm:p-6 text-left">
                 <div className="flex items-start justify-between">
-                  <span className="text-3xl sm:text-4xl lg:text-5xl font-extrabold">{number}</span>
+                  <span className="text-3xl sm:text-4xl lg:text-5xl font-extrabold">{stat.number}</span>
                 </div>
-                <h3 className="mt-6 sm:mt-8 text-base sm:text-lg lg:text-xl font-bold leading-snug">{label}</h3>
+                <h3 className="mt-6 sm:mt-8 text-base sm:text-lg lg:text-xl font-bold leading-snug">{stat.label}</h3>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Work Section - Fixed responsive issues */}
+      {/* Work Section */}
       <section id="work" className="relative px-4 py-20 sm:px-6 sm:py-24 lg:py-28">
         <div aria-hidden="true" className="absolute -right-44 inset-y-0 w-96 bg-[#3b0c85] opacity-25 blur-3xl" />
         <div className="relative mx-auto max-w-7xl text-center">
@@ -520,7 +572,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Testimonials Section - Fixed responsive issues */}
+      {/* Testimonials Section */}
       {testimonials.length > 0 && (
         <section id="testimonials" className="px-4 py-20 sm:px-6 sm:py-24 bg-[#111013]">
           <div className="mx-auto max-w-7xl text-center">
@@ -553,7 +605,7 @@ export default function Page() {
         </section>
       )}
 
-      {/* Contact Section - Fixed responsive issues */}
+      {/* Contact Section */}
       <section id="contact" className="px-4 py-20 sm:px-6 sm:py-24 lg:py-28 text-center">
         <Globe2 className="mx-auto text-[#7727ff]" size={32} />
         <h2 className="mx-auto mt-6 max-w-3xl text-balance text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
@@ -567,7 +619,7 @@ export default function Page() {
         </a>
       </section>
 
-      {/* Footer - Fixed responsive issues */}
+      {/* Footer */}
       <footer className="border-t border-[#211d27] bg-[#09080b] px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col justify-between gap-8 border-b border-[#211d27] pb-10 sm:gap-10 sm:pb-12 lg:flex-row lg:items-end">
